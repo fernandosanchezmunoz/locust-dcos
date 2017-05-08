@@ -18,22 +18,24 @@ pods:
           "LOAD_TEST_URL": "{{LOCUST-LOAD_TEST_URL}}"
           "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
         ports:
-          locust-master:
-            port: 8089
-            vip:
-              prefix: locust-master
+            locust-master-8089:
               port: 8089
-              advertise: true
-            port: 5557 
-            vip:
-              prefix: locust-master
-              port: 5557
-              advertise: true
-            port: 5558
-            vip:
-              prefix: locust-master
-              port: 5558
-              advertise: true
+              vip:
+                prefix: locust-master
+                port: 8089
+                advertise: true
+            locust-master-5557:
+	      port: 5557 
+              vip:
+                prefix: locust-master
+                port: 5557
+                advertise: true
+            locust-master-5558
+	      port: 5558
+              vip:
+                prefix: locust-master
+                port: 5558
+                advertise: true
         health-check:
           cmd: "true"
           interval: 5
@@ -58,7 +60,7 @@ pods:
           "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
           "LOCUST_MASTER": "{{SERVICE-NAME}}.marathon.l4lb.thisdcos.directory:8089"
         ports:
-          locust-master:
+          locust-slave-8089:
             port: 8089
             vip:
               prefix: locust-slave
