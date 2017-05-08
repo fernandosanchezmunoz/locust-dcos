@@ -8,7 +8,7 @@
   "description": "Locust on DC/OS",
   "selected": false,
   "framework": true,
-  "tags": ["locust", "test", "web", "load testing", "testing"],
+  "tags": ["locust", "test", "web", "load-testing", "testing"],
   "preInstallNotes": "This DC/OS Service is currently EXPERIMENTAL. There may be bugs, incomplete features, incorrect documentation, or other discrepancies.",
   "postInstallNotes": "DC/OS Locust is being installed!\n\n\tDocumentation: https://github.com/fernandosanchezmunoz/locust-dcos/wiki",
   "postUninstallNotes": "DC/OS Locust has been uninstalled.",

@@ -11,12 +11,13 @@ pods:
     tasks:
       locust-master:
         goal: RUNNING
+        cmd: "echo locust >> locust-container-path/output && ./run.sh"
         cpus: 0.5
         memory: 256
         env:
           "LOCUST_MODE": "master"
-          "LOAD_TEST_URL": "{{LOCUST-LOAD_TEST_URL}}"
-          "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
         ports:
             locust-master-8089:
               port: 8089
@@ -30,7 +31,7 @@ pods:
                 prefix: locust-master
                 port: 5557
                 advertise: true
-            locust-master-5558
+            locust-master-5558:
               port: 5558
               vip:
                 prefix: locust-master
@@ -52,13 +53,14 @@ pods:
     tasks:
       locust-slave:
         goal: RUNNING
+        cmd: "echo locust-slave >> locust-container-path/output && ./run.sh"
         cpus: {{NODE_CPUS}}
         memory: {{NODE_MEM}}
         env:
-          "LOAD_TEST_URL": "{{LOCUST-LOAD_TEST_URL}}"
           "LOCUST_MODE": "slave"
-          "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
-          "LOCUST_MASTER": "{{SERVICE-NAME}}.marathon.l4lb.thisdcos.directory:8089"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+          "LOCUST_MASTER": "locust-master.marathon.l4lb.thisdcos.directory:8089"
         ports:
           locust-slave-8089:
             port: 8089

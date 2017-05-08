@@ -8,6 +8,7 @@ RUN yum -y install epel-release && \
     pip install --upgrade pip && \
     pip install locustio && \
     yum -y remove python-devel gcc && \
+    yum -y install java-1.8.0-openjdk-headless && \
     yum clean all
 
 COPY ./files/run.sh /

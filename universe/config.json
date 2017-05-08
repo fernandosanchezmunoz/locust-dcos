@@ -14,7 +14,7 @@
             "description":"Locust file to be used",
             "type":"string",
             "default":"https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/locustfile.py"
-          },
+          }
         }        
       }, 
       "service": {

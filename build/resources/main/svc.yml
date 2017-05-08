@@ -1,20 +1,87 @@
-name: {{FRAMEWORK_NAME}}
+name: "locust"
 scheduler:
-  principal: {{FRAMEWORK_PRINCIPAL}}
-  user: {{FRAMEWORK_USER}}
+  principal: "locust-principal"
 pods:
-  locust:
-    count: {{NODE_COUNT}}
-    placement: {{NODE_PLACEMENT}}
+  locust-master-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 1  
     tasks:
-      node:
+      locust-master:
         goal: RUNNING
-        cmd: "echo locust >> locust-container-path/output && sleep $SLEEP_DURATION"
+        cmd: "echo locust >> locust-container-path/output && ./run.sh"
+        cpus: 0.5
+        memory: 256
+        env:
+          "LOCUST_MODE": "master"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+        ports:
+            locust-master-8089:
+              port: 8089
+              vip:
+                prefix: locust-master
+                port: 8089
+                advertise: true
+            locust-master-5557:
+              port: 5557 
+              vip:
+                prefix: locust-master
+                port: 5557
+                advertise: true
+            locust-master-5558:
+              port: 5558
+              vip:
+                prefix: locust-master
+                port: 5558
+                advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+  locust-slave-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: {{NODE_COUNT}}
+    tasks:
+      locust-slave:
+        goal: RUNNING
+        cmd: "echo locust-slave >> locust-container-path/output && ./run.sh"
         cpus: {{NODE_CPUS}}
         memory: {{NODE_MEM}}
-        volume:
-          path: "locust-container-path"
-          type: {{NODE_DISK_TYPE}}
-          size: {{NODE_DISK}}
         env:
-          SLEEP_DURATION: {{SLEEP_DURATION}}
+          "LOCUST_MODE": "slave"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+          "LOCUST_MASTER": "locust-master.marathon.l4lb.thisdcos.directory:8089"
+        ports:
+          locust-slave-8089:
+            port: 8089
+            vip:
+              prefix: locust-slave
+              port: 8089
+              advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10      
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      locust-master-phase:
+        strategy: parallel
+        pod: locust-master-pod
+      locust-slave-phase:
+        strategy: serial
+        pod: locust-slave-pod

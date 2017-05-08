@@ -1,109 +1,243 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.mesosphere.sdk.locust.scheduler.ServiceSpecTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2017-05-08T16:27:50" hostname="dcos-docker-sdk" time="13.625">
+<testsuite name="com.mesosphere.sdk.locust.scheduler.ServiceSpecTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2017-05-08T20:26:26" hostname="dcos-docker-sdk" time="14.013">
   <properties/>
-  <testcase name="testYmlBase" classname="com.mesosphere.sdk.locust.scheduler.ServiceSpecTest" time="13.625"/>
-  <system-out><![CDATA[INFO  2017-05-08 09:27:54,389 [Test worker] com.mesosphere.sdk.specification.yaml.YAMLServiceSpecFactory:generateRawSpecFromYAML(59): Rendered ServiceSpec:
-name: locust
+  <testcase name="testYmlBase" classname="com.mesosphere.sdk.locust.scheduler.ServiceSpecTest" time="14.013"/>
+  <system-out><![CDATA[INFO  2017-05-08 13:26:29,536 [Test worker] com.mesosphere.sdk.specification.yaml.YAMLServiceSpecFactory:generateRawSpecFromYAML(59): Rendered ServiceSpec:
+name: "locust"
 scheduler:
-  principal: 
-  user: 
+  principal: "locust-principal"
 pods:
-  locust:
-    count: 2
-    placement: 
+  locust-master-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 1  
     tasks:
-      node:
+      locust-master:
         goal: RUNNING
-        cmd: "echo locust >> locust-container-path/output && sleep $SLEEP_DURATION"
+        cmd: "echo locust >> locust-container-path/output && ./run.sh"
+        cpus: 0.5
+        memory: 256
+        env:
+          "LOCUST_MODE": "master"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+        ports:
+            locust-master-8089:
+              port: 8089
+              vip:
+                prefix: locust-master
+                port: 8089
+                advertise: true
+            locust-master-5557:
+              port: 5557 
+              vip:
+                prefix: locust-master
+                port: 5557
+                advertise: true
+            locust-master-5558:
+              port: 5558
+              vip:
+                prefix: locust-master
+                port: 5558
+                advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+  locust-slave-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 2
+    tasks:
+      locust-slave:
+        goal: RUNNING
+        cmd: "echo locust-slave >> locust-container-path/output && ./run.sh"
         cpus: 0.1
         memory: 512
-        volume:
-          path: "locust-container-path"
-          type: ROOT
-          size: 5000
         env:
-          SLEEP_DURATION: 1000
+          "LOCUST_MODE": "slave"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+          "LOCUST_MASTER": "locust-master.marathon.l4lb.thisdcos.directory:8089"
+        ports:
+          locust-slave-8089:
+            port: 8089
+            vip:
+              prefix: locust-slave
+              port: 8089
+              advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10      
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      locust-master-phase:
+        strategy: parallel
+        pod: locust-master-pod
+      locust-slave-phase:
+        strategy: serial
+        pod: locust-slave-pod
 
-INFO  2017-05-08 09:27:55,542 [Test worker] org.hibernate.validator.internal.util.Version:<clinit>(30): HV000001: Hibernate Validator 5.3.2.Final
-INFO  2017-05-08 09:27:59,782 [Test worker] com.mesosphere.sdk.specification.yaml.YAMLServiceSpecFactory:generateRawSpecFromYAML(59): Rendered ServiceSpec:
-name: locust
+INFO  2017-05-08 13:26:30,579 [Test worker] org.hibernate.validator.internal.util.Version:<clinit>(30): HV000001: Hibernate Validator 5.3.2.Final
+INFO  2017-05-08 13:26:35,213 [Test worker] com.mesosphere.sdk.specification.yaml.YAMLServiceSpecFactory:generateRawSpecFromYAML(59): Rendered ServiceSpec:
+name: "locust"
 scheduler:
-  principal: 
-  user: 
+  principal: "locust-principal"
 pods:
-  locust:
-    count: 2
-    placement: 
+  locust-master-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 1  
     tasks:
-      node:
+      locust-master:
         goal: RUNNING
-        cmd: "echo locust >> locust-container-path/output && sleep $SLEEP_DURATION"
+        cmd: "echo locust >> locust-container-path/output && ./run.sh"
+        cpus: 0.5
+        memory: 256
+        env:
+          "LOCUST_MODE": "master"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+        ports:
+            locust-master-8089:
+              port: 8089
+              vip:
+                prefix: locust-master
+                port: 8089
+                advertise: true
+            locust-master-5557:
+              port: 5557 
+              vip:
+                prefix: locust-master
+                port: 5557
+                advertise: true
+            locust-master-5558:
+              port: 5558
+              vip:
+                prefix: locust-master
+                port: 5558
+                advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+  locust-slave-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 2
+    tasks:
+      locust-slave:
+        goal: RUNNING
+        cmd: "echo locust-slave >> locust-container-path/output && ./run.sh"
         cpus: 0.1
         memory: 512
-        volume:
-          path: "locust-container-path"
-          type: ROOT
-          size: 5000
         env:
-          SLEEP_DURATION: 1000
+          "LOCUST_MODE": "slave"
+          "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com"
+          "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py"
+          "LOCUST_MASTER": "locust-master.marathon.l4lb.thisdcos.directory:8089"
+        ports:
+          locust-slave-8089:
+            port: 8089
+            vip:
+              prefix: locust-slave
+              port: 8089
+              advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10      
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      locust-master-phase:
+        strategy: parallel
+        pod: locust-master-pod
+      locust-slave-phase:
+        strategy: serial
+        pod: locust-slave-pod
 
-INFO  2017-05-08 09:28:00,817 [Thread-5] org.apache.zookeeper.server.ZooKeeperServerMain:runFromConfig(95): Starting server
-INFO  2017-05-08 09:28:00,904 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:zookeeper.version=3.4.6-1569965, built on 02/20/2014 09:09 GMT
-INFO  2017-05-08 09:28:00,905 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:host.name=dcos-docker-sdk
-INFO  2017-05-08 09:28:00,905 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.version=1.8.0_112
-INFO  2017-05-08 09:28:00,905 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.vendor=Oracle Corporation
-INFO  2017-05-08 09:28:00,907 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.home=/opt/jdk1.8.0_112/jre
-INFO  2017-05-08 09:28:00,908 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.class.path=/dcos-commons/frameworks/locust/build/classes/test:/dcos-commons/frameworks/locust/build/resources/test:/dcos-commons/frameworks/locust/build/classes/main:/dcos-commons/frameworks/locust/build/resources/main:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.mesos/mesos/1.2.0-rc1/b1c3cfdacdd1262c6b0c2344bd1a7da6cf3aebbc/mesos-1.2.0-rc1.jar:/dcos-commons/sdk/scheduler/build/libs/scheduler-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/executor/build/libs/executor-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/testing/build/libs/testing-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-java/2.6.1/d9521f2aecb909835746b7a5facf612af5e890e8/protobuf-java-2.6.1.jar:/dcos-commons/sdk/common/build/libs/common-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-guava/2.6.3/9c3a0c1b254c8205468cf11b46783b4c51ca0236/jackson-datatype-guava-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.6.3/791500a712616459d2406bffabdcd639beb9f577/jackson-datatype-jdk8-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.6.3/1e8848e2a3ddaaacbb9ac1eeb4da90f7630084c4/jackson-datatype-jsr310-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.6.3/982067f5d57301b19f8cc9eae8d6c702626b3ac4/jackson-dataformat-yaml-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.6.3/5c4fcae53dd82e2c549b8322d78c6ff47c94c8a8/jackson-databind-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.hubspot.jackson/jackson-datatype-protobuf/0.9.3/2199a9703a823fbfe48c71a963cb7a8a7e7cc4b/jackson-datatype-protobuf-0.9.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/annotations/3.0.1u2/89a670596c98e416fb2583c08ae34cc5c3ce2097/annotations-3.0.1u2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-collections/commons-collections/3.2.2/8ad72fe39fa8c91eaaf12aadb21e0c3661fe26d5/commons-collections-3.2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.5.1-1/66144204f9d6d7d3f3f775622c2dd7e9bd511d97/antlr4-runtime-4.5.1-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/104e9c2b5583cfcfeac0402316221648d6d8ea6b/javax.ws.rs-api-2.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-framework/2.9.1/815f5efdcbab8cf48130433fa3ea1df3ac2b76f6/curator-framework-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-recipes/2.9.1/a96f133d065a468255a6e92b4bb2e13d20bb4436/curator-recipes-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-test/2.9.1/b77c6b2a8a6b3fcf095159cfc156293f12292dbb/curator-test-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.2/733db77aa8d9b2d68015189df76ab06304406e50/httpclient-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/fluent-hc/4.5.2/7bfdfa49de6d720ad3c8cedb6a5238eec564dfed/fluent-hc-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.4/5fe28b9518e58819180a43a850fbc0dd24b7c050/commons-lang3-3.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.protobuf-java-format/protobuf-java-format/1.4/b8163b6940102c1808814471476f5293dfb419df/protobuf-java-format-1.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.json/json/20160212/a742e3f85161835b95877478c5dd5b405cefaab9/json-20160212.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject/guice/3.0/9d84f15fe35e2c716a02979fb62f50a29f38aefa/guice-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-assistedinject/3.0/544449ddb19f088dcde44f055d30a08835a954a7/guice-assistedinject-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.java-diff-utils/diffutils/1.3.0/7e060dd5b19431e6d198e91ff670644372f60fbd/diffutils-1.3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-jetty-http/2.23.2/c041ba7efd22ecfdffca3a87d8bd2032ddda0ddd/jersey-container-jetty-http-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-json-jackson/2.23.2/d1e998ab7f00dbdbc543b1a916f63c2616c202ab/jersey-media-json-jackson-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-servlet/9.2.3.v20140905/c063fd522fa7110b7916a77c9aa5652065bb8bf3/jetty-servlet-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.spullara.mustache.java/compiler/0.9.2/7235e9abefb1c7045dfd7edf777d347f63982c40/compiler-0.9.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hibernate/hibernate-validator/5.3.2.Final/3a22a88e18196e25b01fc7cf606bff1892985662/hibernate-validator-5.3.2.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.el/javax.el-api/2.2.4/1287562cc3f0ff5439ded6f2949e73ce1c0edaab/javax.el-api-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.web/javax.el/2.2.4/a50914ff519682e185bca4385b4313b8c8a81775/javax.el-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.mesosphere/mesos-http-adapter/0.4.0/81633e740c5ff849ab4cd64772f10e125663790/mesos-http-adapter-0.4.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.stefanbirkner/system-rules/1.16.0/1bec4d14816e23a1715d5c55db36919b5a529a4f/system-rules-1.16.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-all/1.9.5/79a8984096fc6591c1e3690e07d41be506356fa5/mockito-all-1.9.5.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.25/da76ca59f6a57ee3102f8f9bd9cee742973efa8a/slf4j-api-1.7.25.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.8.1/4ac28ff2f1ddf05dae3043a190451e8c46b73c31/log4j-core-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.8.1/709b07000087f3a0dec1bc4b5e05281499588cae/log4j-slf4j-impl-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.10/4b95f4897fa13f2cd904aee711aeafc0c5295cd8/commons-codec-1.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.6.3/142ce64dcd709a4b5f6e7d71305a31d3893d077/jackson-core-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.15/3b132bea69e8ee099f416044970997bde80f4ea6/snakeyaml-1.15.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.6.0/a0990e2e812ac6639b6ce955c91b13228500476e/jackson-annotations-2.6.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-client/2.9.1/9a60e6cd233f710b166e890fa2cc0886a90db4a4/curator-client-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.zookeeper/zookeeper/3.4.6/1b2502e29da1ebaade2357cd1de35a855fa3755/zookeeper-3.4.6.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math/2.2/4877b85d388275f994a5cfc7eceb73a8045d3006/commons-math-2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.4/b31526a230871fbe285fbcbe2813f9c0839ae9b0/httpcore-4.4.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.sonatype.sisu.inject/cglib/2.2.1-v20090111/7ce5e983fd0e6c78346f4c9cbfa39d83049dda2/cglib-2.2.1-v20090111.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.5.0-b05/aad1872e1bf5e573229b7ec143d6f83f33b753e4/javax.inject-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-server/9.2.14.v20151106/70b22c1353e884accf6300093362b25993dac0f5/jetty-server-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-util/9.2.14.v20151106/57e00b912ae0c35859ac81594a996007706a0b/jetty-util-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-continuation/9.2.14.v20151106/8909d62fd7e28351e2da30de6fb4105539b949c0/jetty-continuation-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.23.2/84df56324789921fb408985dc1355f628de0b80c/jersey-common-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.23.2/f17025b8e32b48bee43b2c9ca40e21fc90cf38fb/jersey-server-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.ext/jersey-entity-filtering/2.23.2/f2d453e79ccf4c1f6e6a62553ff6fa91a3b19820/jersey-entity-filtering-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.5.4/8af261181ae4fb16ccce5e116fa25bc3143785b8/jackson-jaxrs-base-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.5.4/1c32a260754c3b13adcea6cc92259a78137751b6/jackson-jaxrs-json-provider-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-security/9.2.3.v20140905/d4e73264bd2dc327025069e49a23cb781800c02f/jetty-security-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.jboss.logging/jboss-logging/3.3.0.Final/3616bb87707910296e2c195dc016287080bba5af/jboss-logging-3.3.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml/classmate/1.3.1/2ad2fd09dcf5607ca96f8ef432096a96986c40a/classmate-1.3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/jcl-over-slf4j/1.7.10/ce49a188721bc39cb9710b346ae9b7ec27b0f36b/jcl-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/log4j-over-slf4j/1.7.10/e62ea5dcb382aff512c18e40fed01a30e0480cd3/log4j-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client/1.20.0/93d82db2bca534960253f43424b2ba9d7638b4d2/google-http-client-1.20.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.kenai.nbpwr/edu-umd-cs-findbugs-annotations/1.3.2-201002241900/17ac3ab1435a01bc6cdfc1c897c416cbf8b1750d/edu-umd-cs-findbugs-annotations-1.3.2-201002241900.nbm:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.1/e801d13612e22cad62a3f4f3fe7fdbe6334a8e72/log4j-api-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.16/7999a63bfccbc7c247a9aea10d83d4272bd492c6/log4j-1.2.16.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/jline/jline/0.9.94/99a18e9a44834afdebc467294e1138364c207402/jline-0.9.94.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/io.netty/netty/3.7.0.Final/7a8c35599c68c0bf383df74469aa3e03d9aca87/netty-3.7.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/asm/asm/3.1/c157def142714c544bdea2e6144645702adf7097/asm-3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-http/9.2.14.v20151106/699ad1f2fa6fb0717e1b308a8c9e1b8c69d81ef6/jetty-http-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-io/9.2.14.v20151106/dfa4137371a3f08769820138ca1a2184dacda267/jetty-io-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.23.2/eead3375706f2d5df991e14821efe509bfb182e0/jersey-guava-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.5.0-b05/d54a52f5b869b247348cb0ec08edd432c22ef65f/hk2-api-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.5.0-b05/bed6e7565ce9491a53f047c17e3951b4dfd101fa/hk2-locator-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/4ed2b2d4738aed5786cfa64cba5a332779c4c708/osgi-resource-locator-1.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.23.2/90ea1d2edb93653d15fce3c3b4a20f2237690900/jersey-client-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.23.2/25c2d322e193371ab800367f553207290da1cb0b/jersey-media-jaxb-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.5.4/52c516db26a89b726a1351f7f24347c640204343/jackson-module-jaxb-annotations-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.sourceforge.findbugs/annotations/1.3.2/d77bc83e0408680034a29481a89de0dba9802a97/annotations-1.3.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.5.0-b05/ede783b3e16339f83603e3293c83bda7a88526bc/hk2-utils-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.5.0-b05/51becf370a71dad73e6bcc554efb7246ad24c492/aopalliance-repackaged-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.jcip/jcip-annotations/1.0/afba4942caaeaf46aab0b976afd57cc7c181467e/jcip-annotations-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.20.0-GA/a9cbcdfb7e9f86fbc74d3afae65f2248bfbf82a0/javassist-3.20.0-GA.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.1/f7be08ec23c21485b9b5a1cf1654c2ec8c58168d/jsr305-3.0.1.jar
-INFO  2017-05-08 09:28:00,921 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
-INFO  2017-05-08 09:28:00,921 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.io.tmpdir=/tmp
-INFO  2017-05-08 09:28:00,921 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.compiler=<NA>
-INFO  2017-05-08 09:28:00,921 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.name=Linux
-INFO  2017-05-08 09:28:00,921 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.arch=amd64
-INFO  2017-05-08 09:28:00,922 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.version=3.10.0-327.36.1.el7.x86_64
-INFO  2017-05-08 09:28:00,922 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.name=vagrant
-INFO  2017-05-08 09:28:00,922 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.home=/home/vagrant
-INFO  2017-05-08 09:28:00,922 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.dir=/dcos-commons/frameworks/locust
-INFO  2017-05-08 09:28:00,972 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setTickTime(755): tickTime set to 3000
-INFO  2017-05-08 09:28:00,973 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setMinSessionTimeout(764): minSessionTimeout set to -1
-INFO  2017-05-08 09:28:00,973 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setMaxSessionTimeout(773): maxSessionTimeout set to -1
-INFO  2017-05-08 09:28:01,018 [Thread-5] org.apache.zookeeper.server.NIOServerCnxnFactory:configure(94): binding to port 0.0.0.0/0.0.0.0:33342
-INFO  2017-05-08 09:28:02,616 [Test worker] org.apache.curator.framework.imps.CuratorFrameworkImpl:start(234): Starting
-INFO  2017-05-08 09:28:02,690 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:zookeeper.version=3.4.6-1569965, built on 02/20/2014 09:09 GMT
-INFO  2017-05-08 09:28:02,691 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:host.name=dcos-docker-sdk
-INFO  2017-05-08 09:28:02,691 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.version=1.8.0_112
-INFO  2017-05-08 09:28:02,692 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.vendor=Oracle Corporation
-INFO  2017-05-08 09:28:02,693 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.home=/opt/jdk1.8.0_112/jre
-INFO  2017-05-08 09:28:02,693 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.class.path=/dcos-commons/frameworks/locust/build/classes/test:/dcos-commons/frameworks/locust/build/resources/test:/dcos-commons/frameworks/locust/build/classes/main:/dcos-commons/frameworks/locust/build/resources/main:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.mesos/mesos/1.2.0-rc1/b1c3cfdacdd1262c6b0c2344bd1a7da6cf3aebbc/mesos-1.2.0-rc1.jar:/dcos-commons/sdk/scheduler/build/libs/scheduler-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/executor/build/libs/executor-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/testing/build/libs/testing-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-java/2.6.1/d9521f2aecb909835746b7a5facf612af5e890e8/protobuf-java-2.6.1.jar:/dcos-commons/sdk/common/build/libs/common-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-guava/2.6.3/9c3a0c1b254c8205468cf11b46783b4c51ca0236/jackson-datatype-guava-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.6.3/791500a712616459d2406bffabdcd639beb9f577/jackson-datatype-jdk8-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.6.3/1e8848e2a3ddaaacbb9ac1eeb4da90f7630084c4/jackson-datatype-jsr310-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.6.3/982067f5d57301b19f8cc9eae8d6c702626b3ac4/jackson-dataformat-yaml-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.6.3/5c4fcae53dd82e2c549b8322d78c6ff47c94c8a8/jackson-databind-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.hubspot.jackson/jackson-datatype-protobuf/0.9.3/2199a9703a823fbfe48c71a963cb7a8a7e7cc4b/jackson-datatype-protobuf-0.9.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/annotations/3.0.1u2/89a670596c98e416fb2583c08ae34cc5c3ce2097/annotations-3.0.1u2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-collections/commons-collections/3.2.2/8ad72fe39fa8c91eaaf12aadb21e0c3661fe26d5/commons-collections-3.2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.5.1-1/66144204f9d6d7d3f3f775622c2dd7e9bd511d97/antlr4-runtime-4.5.1-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/104e9c2b5583cfcfeac0402316221648d6d8ea6b/javax.ws.rs-api-2.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-framework/2.9.1/815f5efdcbab8cf48130433fa3ea1df3ac2b76f6/curator-framework-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-recipes/2.9.1/a96f133d065a468255a6e92b4bb2e13d20bb4436/curator-recipes-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-test/2.9.1/b77c6b2a8a6b3fcf095159cfc156293f12292dbb/curator-test-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.2/733db77aa8d9b2d68015189df76ab06304406e50/httpclient-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/fluent-hc/4.5.2/7bfdfa49de6d720ad3c8cedb6a5238eec564dfed/fluent-hc-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.4/5fe28b9518e58819180a43a850fbc0dd24b7c050/commons-lang3-3.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.protobuf-java-format/protobuf-java-format/1.4/b8163b6940102c1808814471476f5293dfb419df/protobuf-java-format-1.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.json/json/20160212/a742e3f85161835b95877478c5dd5b405cefaab9/json-20160212.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject/guice/3.0/9d84f15fe35e2c716a02979fb62f50a29f38aefa/guice-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-assistedinject/3.0/544449ddb19f088dcde44f055d30a08835a954a7/guice-assistedinject-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.java-diff-utils/diffutils/1.3.0/7e060dd5b19431e6d198e91ff670644372f60fbd/diffutils-1.3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-jetty-http/2.23.2/c041ba7efd22ecfdffca3a87d8bd2032ddda0ddd/jersey-container-jetty-http-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-json-jackson/2.23.2/d1e998ab7f00dbdbc543b1a916f63c2616c202ab/jersey-media-json-jackson-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-servlet/9.2.3.v20140905/c063fd522fa7110b7916a77c9aa5652065bb8bf3/jetty-servlet-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.spullara.mustache.java/compiler/0.9.2/7235e9abefb1c7045dfd7edf777d347f63982c40/compiler-0.9.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hibernate/hibernate-validator/5.3.2.Final/3a22a88e18196e25b01fc7cf606bff1892985662/hibernate-validator-5.3.2.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.el/javax.el-api/2.2.4/1287562cc3f0ff5439ded6f2949e73ce1c0edaab/javax.el-api-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.web/javax.el/2.2.4/a50914ff519682e185bca4385b4313b8c8a81775/javax.el-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.mesosphere/mesos-http-adapter/0.4.0/81633e740c5ff849ab4cd64772f10e125663790/mesos-http-adapter-0.4.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.stefanbirkner/system-rules/1.16.0/1bec4d14816e23a1715d5c55db36919b5a529a4f/system-rules-1.16.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-all/1.9.5/79a8984096fc6591c1e3690e07d41be506356fa5/mockito-all-1.9.5.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.25/da76ca59f6a57ee3102f8f9bd9cee742973efa8a/slf4j-api-1.7.25.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.8.1/4ac28ff2f1ddf05dae3043a190451e8c46b73c31/log4j-core-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.8.1/709b07000087f3a0dec1bc4b5e05281499588cae/log4j-slf4j-impl-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.10/4b95f4897fa13f2cd904aee711aeafc0c5295cd8/commons-codec-1.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.6.3/142ce64dcd709a4b5f6e7d71305a31d3893d077/jackson-core-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.15/3b132bea69e8ee099f416044970997bde80f4ea6/snakeyaml-1.15.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.6.0/a0990e2e812ac6639b6ce955c91b13228500476e/jackson-annotations-2.6.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-client/2.9.1/9a60e6cd233f710b166e890fa2cc0886a90db4a4/curator-client-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.zookeeper/zookeeper/3.4.6/1b2502e29da1ebaade2357cd1de35a855fa3755/zookeeper-3.4.6.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math/2.2/4877b85d388275f994a5cfc7eceb73a8045d3006/commons-math-2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.4/b31526a230871fbe285fbcbe2813f9c0839ae9b0/httpcore-4.4.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.sonatype.sisu.inject/cglib/2.2.1-v20090111/7ce5e983fd0e6c78346f4c9cbfa39d83049dda2/cglib-2.2.1-v20090111.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.5.0-b05/aad1872e1bf5e573229b7ec143d6f83f33b753e4/javax.inject-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-server/9.2.14.v20151106/70b22c1353e884accf6300093362b25993dac0f5/jetty-server-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-util/9.2.14.v20151106/57e00b912ae0c35859ac81594a996007706a0b/jetty-util-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-continuation/9.2.14.v20151106/8909d62fd7e28351e2da30de6fb4105539b949c0/jetty-continuation-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.23.2/84df56324789921fb408985dc1355f628de0b80c/jersey-common-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.23.2/f17025b8e32b48bee43b2c9ca40e21fc90cf38fb/jersey-server-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.ext/jersey-entity-filtering/2.23.2/f2d453e79ccf4c1f6e6a62553ff6fa91a3b19820/jersey-entity-filtering-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.5.4/8af261181ae4fb16ccce5e116fa25bc3143785b8/jackson-jaxrs-base-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.5.4/1c32a260754c3b13adcea6cc92259a78137751b6/jackson-jaxrs-json-provider-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-security/9.2.3.v20140905/d4e73264bd2dc327025069e49a23cb781800c02f/jetty-security-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.jboss.logging/jboss-logging/3.3.0.Final/3616bb87707910296e2c195dc016287080bba5af/jboss-logging-3.3.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml/classmate/1.3.1/2ad2fd09dcf5607ca96f8ef432096a96986c40a/classmate-1.3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/jcl-over-slf4j/1.7.10/ce49a188721bc39cb9710b346ae9b7ec27b0f36b/jcl-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/log4j-over-slf4j/1.7.10/e62ea5dcb382aff512c18e40fed01a30e0480cd3/log4j-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client/1.20.0/93d82db2bca534960253f43424b2ba9d7638b4d2/google-http-client-1.20.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.kenai.nbpwr/edu-umd-cs-findbugs-annotations/1.3.2-201002241900/17ac3ab1435a01bc6cdfc1c897c416cbf8b1750d/edu-umd-cs-findbugs-annotations-1.3.2-201002241900.nbm:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.1/e801d13612e22cad62a3f4f3fe7fdbe6334a8e72/log4j-api-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.16/7999a63bfccbc7c247a9aea10d83d4272bd492c6/log4j-1.2.16.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/jline/jline/0.9.94/99a18e9a44834afdebc467294e1138364c207402/jline-0.9.94.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/io.netty/netty/3.7.0.Final/7a8c35599c68c0bf383df74469aa3e03d9aca87/netty-3.7.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/asm/asm/3.1/c157def142714c544bdea2e6144645702adf7097/asm-3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-http/9.2.14.v20151106/699ad1f2fa6fb0717e1b308a8c9e1b8c69d81ef6/jetty-http-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-io/9.2.14.v20151106/dfa4137371a3f08769820138ca1a2184dacda267/jetty-io-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.23.2/eead3375706f2d5df991e14821efe509bfb182e0/jersey-guava-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.5.0-b05/d54a52f5b869b247348cb0ec08edd432c22ef65f/hk2-api-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.5.0-b05/bed6e7565ce9491a53f047c17e3951b4dfd101fa/hk2-locator-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/4ed2b2d4738aed5786cfa64cba5a332779c4c708/osgi-resource-locator-1.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.23.2/90ea1d2edb93653d15fce3c3b4a20f2237690900/jersey-client-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.23.2/25c2d322e193371ab800367f553207290da1cb0b/jersey-media-jaxb-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.5.4/52c516db26a89b726a1351f7f24347c640204343/jackson-module-jaxb-annotations-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.sourceforge.findbugs/annotations/1.3.2/d77bc83e0408680034a29481a89de0dba9802a97/annotations-1.3.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.5.0-b05/ede783b3e16339f83603e3293c83bda7a88526bc/hk2-utils-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.5.0-b05/51becf370a71dad73e6bcc554efb7246ad24c492/aopalliance-repackaged-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.jcip/jcip-annotations/1.0/afba4942caaeaf46aab0b976afd57cc7c181467e/jcip-annotations-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.20.0-GA/a9cbcdfb7e9f86fbc74d3afae65f2248bfbf82a0/javassist-3.20.0-GA.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.1/f7be08ec23c21485b9b5a1cf1654c2ec8c58168d/jsr305-3.0.1.jar
-INFO  2017-05-08 09:28:02,695 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
-INFO  2017-05-08 09:28:02,696 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.io.tmpdir=/tmp
-INFO  2017-05-08 09:28:02,696 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.compiler=<NA>
-INFO  2017-05-08 09:28:02,696 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.name=Linux
-INFO  2017-05-08 09:28:02,697 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.arch=amd64
-INFO  2017-05-08 09:28:02,697 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.version=3.10.0-327.36.1.el7.x86_64
-INFO  2017-05-08 09:28:02,697 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.name=vagrant
-INFO  2017-05-08 09:28:02,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.home=/home/vagrant
-INFO  2017-05-08 09:28:02,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.dir=/dcos-commons/frameworks/locust
-INFO  2017-05-08 09:28:02,704 [Test worker] org.apache.zookeeper.ZooKeeper:<init>(438): Initiating client connection, connectString=127.0.0.1:33342 sessionTimeout=60000 watcher=org.apache.curator.ConnectionState@b0a6b28
-INFO  2017-05-08 09:28:02,785 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:logStartConnect(975): Opening socket connection to server 127.0.0.1/127.0.0.1:33342. Will not attempt to authenticate using SASL (unknown error)
-INFO  2017-05-08 09:28:02,800 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:primeConnection(852): Socket connection established to 127.0.0.1/127.0.0.1:33342, initiating session
-INFO  2017-05-08 09:28:02,801 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:33342] org.apache.zookeeper.server.NIOServerCnxnFactory:run(197): Accepted socket connection from /127.0.0.1:33232
-INFO  2017-05-08 09:28:02,842 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:33342] org.apache.zookeeper.server.ZooKeeperServer:processConnectRequest(868): Client attempting to establish new session at /127.0.0.1:33232
-INFO  2017-05-08 09:28:02,859 [SyncThread:0] org.apache.zookeeper.server.persistence.FileTxnLog:append(199): Creating new log file: log.1
-INFO  2017-05-08 09:28:02,913 [SyncThread:0] org.apache.zookeeper.server.ZooKeeperServer:finishSessionInit(617): Established session 0x15be8e396c90000 with negotiated timeout 60000 for client /127.0.0.1:33232
-INFO  2017-05-08 09:28:02,913 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:onConnected(1235): Session establishment complete on server 127.0.0.1/127.0.0.1:33342, sessionid = 0x15be8e396c90000, negotiated timeout = 60000
-INFO  2017-05-08 09:28:02,945 [Test worker-EventThread] org.apache.curator.framework.state.ConnectionStateManager:postState(228): State change: CONNECTED
-INFO  2017-05-08 09:28:03,059 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:pRequest(645): Got user-level KeeperException when processing sessionid:0x15be8e396c90000 type:create cxid:0x2 zxid:0x2 txntype:-1 reqpath:n/a Error Path:/dcos-service-locust Error:KeeperErrorCode = NoNode for /dcos-service-locust
-INFO  2017-05-08 09:28:03,268 [Test worker] org.apache.curator.framework.imps.CuratorFrameworkImpl:start(234): Starting
-INFO  2017-05-08 09:28:03,270 [Test worker] org.apache.zookeeper.ZooKeeper:<init>(438): Initiating client connection, connectString=127.0.0.1:33342 sessionTimeout=60000 watcher=org.apache.curator.ConnectionState@601adcbc
-INFO  2017-05-08 09:28:03,273 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:logStartConnect(975): Opening socket connection to server 127.0.0.1/127.0.0.1:33342. Will not attempt to authenticate using SASL (unknown error)
-INFO  2017-05-08 09:28:03,274 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:primeConnection(852): Socket connection established to 127.0.0.1/127.0.0.1:33342, initiating session
-INFO  2017-05-08 09:28:03,275 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:33342] org.apache.zookeeper.server.NIOServerCnxnFactory:run(197): Accepted socket connection from /127.0.0.1:33234
-INFO  2017-05-08 09:28:03,276 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:33342] org.apache.zookeeper.server.ZooKeeperServer:processConnectRequest(868): Client attempting to establish new session at /127.0.0.1:33234
-INFO  2017-05-08 09:28:03,279 [SyncThread:0] org.apache.zookeeper.server.ZooKeeperServer:finishSessionInit(617): Established session 0x15be8e396c90001 with negotiated timeout 60000 for client /127.0.0.1:33234
-INFO  2017-05-08 09:28:03,280 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:onConnected(1235): Session establishment complete on server 127.0.0.1/127.0.0.1:33342, sessionid = 0x15be8e396c90001, negotiated timeout = 60000
-INFO  2017-05-08 09:28:03,280 [Test worker-EventThread] org.apache.curator.framework.state.ConnectionStateManager:postState(228): State change: CONNECTED
-INFO  2017-05-08 09:28:03,309 [Test worker] com.mesosphere.sdk.scheduler.DefaultScheduler:updateConfig(511): Updating config with 2 validators...
-INFO  2017-05-08 09:28:03,330 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(76): New prospective config:
+INFO  2017-05-08 13:26:36,668 [Thread-5] org.apache.zookeeper.server.ZooKeeperServerMain:runFromConfig(95): Starting server
+INFO  2017-05-08 13:26:36,916 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:zookeeper.version=3.4.6-1569965, built on 02/20/2014 09:09 GMT
+INFO  2017-05-08 13:26:36,916 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:host.name=dcos-docker-sdk
+INFO  2017-05-08 13:26:36,917 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.version=1.8.0_112
+INFO  2017-05-08 13:26:36,917 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.vendor=Oracle Corporation
+INFO  2017-05-08 13:26:36,917 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.home=/opt/jdk1.8.0_112/jre
+INFO  2017-05-08 13:26:36,917 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.class.path=/dcos-commons/frameworks/locust/build/classes/test:/dcos-commons/frameworks/locust/build/resources/test:/dcos-commons/frameworks/locust/build/classes/main:/dcos-commons/frameworks/locust/build/resources/main:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.mesos/mesos/1.2.0-rc1/b1c3cfdacdd1262c6b0c2344bd1a7da6cf3aebbc/mesos-1.2.0-rc1.jar:/dcos-commons/sdk/scheduler/build/libs/scheduler-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/executor/build/libs/executor-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/testing/build/libs/testing-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-java/2.6.1/d9521f2aecb909835746b7a5facf612af5e890e8/protobuf-java-2.6.1.jar:/dcos-commons/sdk/common/build/libs/common-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-guava/2.6.3/9c3a0c1b254c8205468cf11b46783b4c51ca0236/jackson-datatype-guava-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.6.3/791500a712616459d2406bffabdcd639beb9f577/jackson-datatype-jdk8-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.6.3/1e8848e2a3ddaaacbb9ac1eeb4da90f7630084c4/jackson-datatype-jsr310-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.6.3/982067f5d57301b19f8cc9eae8d6c702626b3ac4/jackson-dataformat-yaml-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.6.3/5c4fcae53dd82e2c549b8322d78c6ff47c94c8a8/jackson-databind-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.hubspot.jackson/jackson-datatype-protobuf/0.9.3/2199a9703a823fbfe48c71a963cb7a8a7e7cc4b/jackson-datatype-protobuf-0.9.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/annotations/3.0.1u2/89a670596c98e416fb2583c08ae34cc5c3ce2097/annotations-3.0.1u2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-collections/commons-collections/3.2.2/8ad72fe39fa8c91eaaf12aadb21e0c3661fe26d5/commons-collections-3.2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.5.1-1/66144204f9d6d7d3f3f775622c2dd7e9bd511d97/antlr4-runtime-4.5.1-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/104e9c2b5583cfcfeac0402316221648d6d8ea6b/javax.ws.rs-api-2.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-framework/2.9.1/815f5efdcbab8cf48130433fa3ea1df3ac2b76f6/curator-framework-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-recipes/2.9.1/a96f133d065a468255a6e92b4bb2e13d20bb4436/curator-recipes-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-test/2.9.1/b77c6b2a8a6b3fcf095159cfc156293f12292dbb/curator-test-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.2/733db77aa8d9b2d68015189df76ab06304406e50/httpclient-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/fluent-hc/4.5.2/7bfdfa49de6d720ad3c8cedb6a5238eec564dfed/fluent-hc-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.4/5fe28b9518e58819180a43a850fbc0dd24b7c050/commons-lang3-3.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.protobuf-java-format/protobuf-java-format/1.4/b8163b6940102c1808814471476f5293dfb419df/protobuf-java-format-1.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.json/json/20160212/a742e3f85161835b95877478c5dd5b405cefaab9/json-20160212.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject/guice/3.0/9d84f15fe35e2c716a02979fb62f50a29f38aefa/guice-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-assistedinject/3.0/544449ddb19f088dcde44f055d30a08835a954a7/guice-assistedinject-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.java-diff-utils/diffutils/1.3.0/7e060dd5b19431e6d198e91ff670644372f60fbd/diffutils-1.3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-jetty-http/2.23.2/c041ba7efd22ecfdffca3a87d8bd2032ddda0ddd/jersey-container-jetty-http-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-json-jackson/2.23.2/d1e998ab7f00dbdbc543b1a916f63c2616c202ab/jersey-media-json-jackson-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-servlet/9.2.3.v20140905/c063fd522fa7110b7916a77c9aa5652065bb8bf3/jetty-servlet-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.spullara.mustache.java/compiler/0.9.2/7235e9abefb1c7045dfd7edf777d347f63982c40/compiler-0.9.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hibernate/hibernate-validator/5.3.2.Final/3a22a88e18196e25b01fc7cf606bff1892985662/hibernate-validator-5.3.2.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.el/javax.el-api/2.2.4/1287562cc3f0ff5439ded6f2949e73ce1c0edaab/javax.el-api-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.web/javax.el/2.2.4/a50914ff519682e185bca4385b4313b8c8a81775/javax.el-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.mesosphere/mesos-http-adapter/0.4.0/81633e740c5ff849ab4cd64772f10e125663790/mesos-http-adapter-0.4.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.stefanbirkner/system-rules/1.16.0/1bec4d14816e23a1715d5c55db36919b5a529a4f/system-rules-1.16.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-all/1.9.5/79a8984096fc6591c1e3690e07d41be506356fa5/mockito-all-1.9.5.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.25/da76ca59f6a57ee3102f8f9bd9cee742973efa8a/slf4j-api-1.7.25.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.8.1/4ac28ff2f1ddf05dae3043a190451e8c46b73c31/log4j-core-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.8.1/709b07000087f3a0dec1bc4b5e05281499588cae/log4j-slf4j-impl-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.10/4b95f4897fa13f2cd904aee711aeafc0c5295cd8/commons-codec-1.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.6.3/142ce64dcd709a4b5f6e7d71305a31d3893d077/jackson-core-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.15/3b132bea69e8ee099f416044970997bde80f4ea6/snakeyaml-1.15.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.6.0/a0990e2e812ac6639b6ce955c91b13228500476e/jackson-annotations-2.6.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-client/2.9.1/9a60e6cd233f710b166e890fa2cc0886a90db4a4/curator-client-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.zookeeper/zookeeper/3.4.6/1b2502e29da1ebaade2357cd1de35a855fa3755/zookeeper-3.4.6.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math/2.2/4877b85d388275f994a5cfc7eceb73a8045d3006/commons-math-2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.4/b31526a230871fbe285fbcbe2813f9c0839ae9b0/httpcore-4.4.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.sonatype.sisu.inject/cglib/2.2.1-v20090111/7ce5e983fd0e6c78346f4c9cbfa39d83049dda2/cglib-2.2.1-v20090111.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.5.0-b05/aad1872e1bf5e573229b7ec143d6f83f33b753e4/javax.inject-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-server/9.2.14.v20151106/70b22c1353e884accf6300093362b25993dac0f5/jetty-server-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-util/9.2.14.v20151106/57e00b912ae0c35859ac81594a996007706a0b/jetty-util-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-continuation/9.2.14.v20151106/8909d62fd7e28351e2da30de6fb4105539b949c0/jetty-continuation-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.23.2/84df56324789921fb408985dc1355f628de0b80c/jersey-common-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.23.2/f17025b8e32b48bee43b2c9ca40e21fc90cf38fb/jersey-server-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.ext/jersey-entity-filtering/2.23.2/f2d453e79ccf4c1f6e6a62553ff6fa91a3b19820/jersey-entity-filtering-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.5.4/8af261181ae4fb16ccce5e116fa25bc3143785b8/jackson-jaxrs-base-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.5.4/1c32a260754c3b13adcea6cc92259a78137751b6/jackson-jaxrs-json-provider-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-security/9.2.3.v20140905/d4e73264bd2dc327025069e49a23cb781800c02f/jetty-security-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.jboss.logging/jboss-logging/3.3.0.Final/3616bb87707910296e2c195dc016287080bba5af/jboss-logging-3.3.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml/classmate/1.3.1/2ad2fd09dcf5607ca96f8ef432096a96986c40a/classmate-1.3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/jcl-over-slf4j/1.7.10/ce49a188721bc39cb9710b346ae9b7ec27b0f36b/jcl-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/log4j-over-slf4j/1.7.10/e62ea5dcb382aff512c18e40fed01a30e0480cd3/log4j-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client/1.20.0/93d82db2bca534960253f43424b2ba9d7638b4d2/google-http-client-1.20.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.kenai.nbpwr/edu-umd-cs-findbugs-annotations/1.3.2-201002241900/17ac3ab1435a01bc6cdfc1c897c416cbf8b1750d/edu-umd-cs-findbugs-annotations-1.3.2-201002241900.nbm:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.1/e801d13612e22cad62a3f4f3fe7fdbe6334a8e72/log4j-api-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.16/7999a63bfccbc7c247a9aea10d83d4272bd492c6/log4j-1.2.16.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/jline/jline/0.9.94/99a18e9a44834afdebc467294e1138364c207402/jline-0.9.94.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/io.netty/netty/3.7.0.Final/7a8c35599c68c0bf383df74469aa3e03d9aca87/netty-3.7.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/asm/asm/3.1/c157def142714c544bdea2e6144645702adf7097/asm-3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-http/9.2.14.v20151106/699ad1f2fa6fb0717e1b308a8c9e1b8c69d81ef6/jetty-http-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-io/9.2.14.v20151106/dfa4137371a3f08769820138ca1a2184dacda267/jetty-io-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.23.2/eead3375706f2d5df991e14821efe509bfb182e0/jersey-guava-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.5.0-b05/d54a52f5b869b247348cb0ec08edd432c22ef65f/hk2-api-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.5.0-b05/bed6e7565ce9491a53f047c17e3951b4dfd101fa/hk2-locator-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/4ed2b2d4738aed5786cfa64cba5a332779c4c708/osgi-resource-locator-1.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.23.2/90ea1d2edb93653d15fce3c3b4a20f2237690900/jersey-client-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.23.2/25c2d322e193371ab800367f553207290da1cb0b/jersey-media-jaxb-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.5.4/52c516db26a89b726a1351f7f24347c640204343/jackson-module-jaxb-annotations-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.sourceforge.findbugs/annotations/1.3.2/d77bc83e0408680034a29481a89de0dba9802a97/annotations-1.3.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.5.0-b05/ede783b3e16339f83603e3293c83bda7a88526bc/hk2-utils-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.5.0-b05/51becf370a71dad73e6bcc554efb7246ad24c492/aopalliance-repackaged-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.jcip/jcip-annotations/1.0/afba4942caaeaf46aab0b976afd57cc7c181467e/jcip-annotations-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.20.0-GA/a9cbcdfb7e9f86fbc74d3afae65f2248bfbf82a0/javassist-3.20.0-GA.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.1/f7be08ec23c21485b9b5a1cf1654c2ec8c58168d/jsr305-3.0.1.jar
+INFO  2017-05-08 13:26:36,919 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+INFO  2017-05-08 13:26:36,919 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.io.tmpdir=/tmp
+INFO  2017-05-08 13:26:36,919 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:java.compiler=<NA>
+INFO  2017-05-08 13:26:36,930 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.name=Linux
+INFO  2017-05-08 13:26:36,930 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.arch=amd64
+INFO  2017-05-08 13:26:36,930 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:os.version=3.10.0-327.36.1.el7.x86_64
+INFO  2017-05-08 13:26:36,930 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.name=vagrant
+INFO  2017-05-08 13:26:36,930 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.home=/home/vagrant
+INFO  2017-05-08 13:26:36,931 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:logEnv(100): Server environment:user.dir=/dcos-commons/frameworks/locust
+INFO  2017-05-08 13:26:36,979 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setTickTime(755): tickTime set to 3000
+INFO  2017-05-08 13:26:36,979 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setMinSessionTimeout(764): minSessionTimeout set to -1
+INFO  2017-05-08 13:26:36,979 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:setMaxSessionTimeout(773): maxSessionTimeout set to -1
+INFO  2017-05-08 13:26:37,027 [Thread-5] org.apache.zookeeper.server.NIOServerCnxnFactory:configure(94): binding to port 0.0.0.0/0.0.0.0:34926
+INFO  2017-05-08 13:26:38,652 [Test worker] org.apache.curator.framework.imps.CuratorFrameworkImpl:start(234): Starting
+INFO  2017-05-08 13:26:38,694 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:zookeeper.version=3.4.6-1569965, built on 02/20/2014 09:09 GMT
+INFO  2017-05-08 13:26:38,694 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:host.name=dcos-docker-sdk
+INFO  2017-05-08 13:26:38,694 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.version=1.8.0_112
+INFO  2017-05-08 13:26:38,694 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.vendor=Oracle Corporation
+INFO  2017-05-08 13:26:38,695 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.home=/opt/jdk1.8.0_112/jre
+INFO  2017-05-08 13:26:38,695 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.class.path=/dcos-commons/frameworks/locust/build/classes/test:/dcos-commons/frameworks/locust/build/resources/test:/dcos-commons/frameworks/locust/build/classes/main:/dcos-commons/frameworks/locust/build/resources/main:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.mesos/mesos/1.2.0-rc1/b1c3cfdacdd1262c6b0c2344bd1a7da6cf3aebbc/mesos-1.2.0-rc1.jar:/dcos-commons/sdk/scheduler/build/libs/scheduler-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/executor/build/libs/executor-0.15.0-SNAPSHOT.jar:/dcos-commons/sdk/testing/build/libs/testing-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.protobuf/protobuf-java/2.6.1/d9521f2aecb909835746b7a5facf612af5e890e8/protobuf-java-2.6.1.jar:/dcos-commons/sdk/common/build/libs/common-0.15.0-SNAPSHOT.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-guava/2.6.3/9c3a0c1b254c8205468cf11b46783b4c51ca0236/jackson-datatype-guava-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jdk8/2.6.3/791500a712616459d2406bffabdcd639beb9f577/jackson-datatype-jdk8-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.datatype/jackson-datatype-jsr310/2.6.3/1e8848e2a3ddaaacbb9ac1eeb4da90f7630084c4/jackson-datatype-jsr310-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.6.3/982067f5d57301b19f8cc9eae8d6c702626b3ac4/jackson-dataformat-yaml-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.6.3/5c4fcae53dd82e2c549b8322d78c6ff47c94c8a8/jackson-databind-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.hubspot.jackson/jackson-datatype-protobuf/0.9.3/2199a9703a823fbfe48c71a963cb7a8a7e7cc4b/jackson-datatype-protobuf-0.9.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/annotations/3.0.1u2/89a670596c98e416fb2583c08ae34cc5c3ce2097/annotations-3.0.1u2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-collections/commons-collections/3.2.2/8ad72fe39fa8c91eaaf12aadb21e0c3661fe26d5/commons-collections-3.2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.4/b1b6ea3b7e4aa4f492509a4952029cd8e48019ad/commons-io-2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.5.1-1/66144204f9d6d7d3f3f775622c2dd7e9bd511d97/antlr4-runtime-4.5.1-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/104e9c2b5583cfcfeac0402316221648d6d8ea6b/javax.ws.rs-api-2.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-framework/2.9.1/815f5efdcbab8cf48130433fa3ea1df3ac2b76f6/curator-framework-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-recipes/2.9.1/a96f133d065a468255a6e92b4bb2e13d20bb4436/curator-recipes-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-test/2.9.1/b77c6b2a8a6b3fcf095159cfc156293f12292dbb/curator-test-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.2/733db77aa8d9b2d68015189df76ab06304406e50/httpclient-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/fluent-hc/4.5.2/7bfdfa49de6d720ad3c8cedb6a5238eec564dfed/fluent-hc-4.5.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.4/5fe28b9518e58819180a43a850fbc0dd24b7c050/commons-lang3-3.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.protobuf-java-format/protobuf-java-format/1.4/b8163b6940102c1808814471476f5293dfb419df/protobuf-java-format-1.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.json/json/20160212/a742e3f85161835b95877478c5dd5b405cefaab9/json-20160212.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject/guice/3.0/9d84f15fe35e2c716a02979fb62f50a29f38aefa/guice-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.inject.extensions/guice-assistedinject/3.0/544449ddb19f088dcde44f055d30a08835a954a7/guice-assistedinject-3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.googlecode.java-diff-utils/diffutils/1.3.0/7e060dd5b19431e6d198e91ff670644372f60fbd/diffutils-1.3.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-jetty-http/2.23.2/c041ba7efd22ecfdffca3a87d8bd2032ddda0ddd/jersey-container-jetty-http-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-json-jackson/2.23.2/d1e998ab7f00dbdbc543b1a916f63c2616c202ab/jersey-media-json-jackson-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-servlet/9.2.3.v20140905/c063fd522fa7110b7916a77c9aa5652065bb8bf3/jetty-servlet-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.spullara.mustache.java/compiler/0.9.2/7235e9abefb1c7045dfd7edf777d347f63982c40/compiler-0.9.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hibernate/hibernate-validator/5.3.2.Final/3a22a88e18196e25b01fc7cf606bff1892985662/hibernate-validator-5.3.2.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.el/javax.el-api/2.2.4/1287562cc3f0ff5439ded6f2949e73ce1c0edaab/javax.el-api-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.web/javax.el/2.2.4/a50914ff519682e185bca4385b4313b8c8a81775/javax.el-2.2.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.mesosphere/mesos-http-adapter/0.4.0/81633e740c5ff849ab4cd64772f10e125663790/mesos-http-adapter-0.4.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/junit/junit/4.12/2973d150c0dc1fefe998f834810d68f278ea58ec/junit-4.12.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.github.stefanbirkner/system-rules/1.16.0/1bec4d14816e23a1715d5c55db36919b5a529a4f/system-rules-1.16.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.mockito/mockito-all/1.9.5/79a8984096fc6591c1e3690e07d41be506356fa5/mockito-all-1.9.5.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/1.7.25/da76ca59f6a57ee3102f8f9bd9cee742973efa8a/slf4j-api-1.7.25.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.8.1/4ac28ff2f1ddf05dae3043a190451e8c46b73c31/log4j-core-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j-impl/2.8.1/709b07000087f3a0dec1bc4b5e05281499588cae/log4j-slf4j-impl-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.10/4b95f4897fa13f2cd904aee711aeafc0c5295cd8/commons-codec-1.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.6.3/142ce64dcd709a4b5f6e7d71305a31d3893d077/jackson-core-2.6.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/1.15/3b132bea69e8ee099f416044970997bde80f4ea6/snakeyaml-1.15.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.6.0/a0990e2e812ac6639b6ce955c91b13228500476e/jackson-annotations-2.6.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.curator/curator-client/2.9.1/9a60e6cd233f710b166e890fa2cc0886a90db4a4/curator-client-2.9.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.zookeeper/zookeeper/3.4.6/1b2502e29da1ebaade2357cd1de35a855fa3755/zookeeper-3.4.6.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-math/2.2/4877b85d388275f994a5cfc7eceb73a8045d3006/commons-math-2.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.4/b31526a230871fbe285fbcbe2813f9c0839ae9b0/httpcore-4.4.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/aopalliance/aopalliance/1.0/235ba8b489512805ac13a8f9ea77a1ca5ebe3e8/aopalliance-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.sonatype.sisu.inject/cglib/2.2.1-v20090111/7ce5e983fd0e6c78346f4c9cbfa39d83049dda2/cglib-2.2.1-v20090111.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.5.0-b05/aad1872e1bf5e573229b7ec143d6f83f33b753e4/javax.inject-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-server/9.2.14.v20151106/70b22c1353e884accf6300093362b25993dac0f5/jetty-server-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-util/9.2.14.v20151106/57e00b912ae0c35859ac81594a996007706a0b/jetty-util-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-continuation/9.2.14.v20151106/8909d62fd7e28351e2da30de6fb4105539b949c0/jetty-continuation-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.23.2/84df56324789921fb408985dc1355f628de0b80c/jersey-common-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.23.2/f17025b8e32b48bee43b2c9ca40e21fc90cf38fb/jersey-server-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.ext/jersey-entity-filtering/2.23.2/f2d453e79ccf4c1f6e6a62553ff6fa91a3b19820/jersey-entity-filtering-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.5.4/8af261181ae4fb16ccce5e116fa25bc3143785b8/jackson-jaxrs-base-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.5.4/1c32a260754c3b13adcea6cc92259a78137751b6/jackson-jaxrs-json-provider-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-security/9.2.3.v20140905/d4e73264bd2dc327025069e49a23cb781800c02f/jetty-security-9.2.3.v20140905.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.jboss.logging/jboss-logging/3.3.0.Final/3616bb87707910296e2c195dc016287080bba5af/jboss-logging-3.3.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml/classmate/1.3.1/2ad2fd09dcf5607ca96f8ef432096a96986c40a/classmate-1.3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/jcl-over-slf4j/1.7.10/ce49a188721bc39cb9710b346ae9b7ec27b0f36b/jcl-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.slf4j/log4j-over-slf4j/1.7.10/e62ea5dcb382aff512c18e40fed01a30e0480cd3/log4j-over-slf4j-1.7.10.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.http-client/google-http-client/1.20.0/93d82db2bca534960253f43424b2ba9d7638b4d2/google-http-client-1.20.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.kenai.nbpwr/edu-umd-cs-findbugs-annotations/1.3.2-201002241900/17ac3ab1435a01bc6cdfc1c897c416cbf8b1750d/edu-umd-cs-findbugs-annotations-1.3.2-201002241900.nbm:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.8.1/e801d13612e22cad62a3f4f3fe7fdbe6334a8e72/log4j-api-2.8.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/log4j/log4j/1.2.16/7999a63bfccbc7c247a9aea10d83d4272bd492c6/log4j-1.2.16.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/jline/jline/0.9.94/99a18e9a44834afdebc467294e1138364c207402/jline-0.9.94.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/io.netty/netty/3.7.0.Final/7a8c35599c68c0bf383df74469aa3e03d9aca87/netty-3.7.0.Final.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/asm/asm/3.1/c157def142714c544bdea2e6144645702adf7097/asm-3.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.servlet/javax.servlet-api/3.1.0/3cd63d075497751784b2fa84be59432f4905bf7c/javax.servlet-api-3.1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-http/9.2.14.v20151106/699ad1f2fa6fb0717e1b308a8c9e1b8c69d81ef6/jetty-http-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.eclipse.jetty/jetty-io/9.2.14.v20151106/dfa4137371a3f08769820138ca1a2184dacda267/jetty-io-9.2.14.v20151106.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.23.2/eead3375706f2d5df991e14821efe509bfb182e0/jersey-guava-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.5.0-b05/d54a52f5b869b247348cb0ec08edd432c22ef65f/hk2-api-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.5.0-b05/bed6e7565ce9491a53f047c17e3951b4dfd101fa/hk2-locator-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/4ed2b2d4738aed5786cfa64cba5a332779c4c708/osgi-resource-locator-1.0.1.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.23.2/90ea1d2edb93653d15fce3c3b4a20f2237690900/jersey-client-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.23.2/25c2d322e193371ab800367f553207290da1cb0b/jersey-media-jaxb-2.23.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/2.5.4/52c516db26a89b726a1351f7f24347c640204343/jackson-module-jaxb-annotations-2.5.4.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.sourceforge.findbugs/annotations/1.3.2/d77bc83e0408680034a29481a89de0dba9802a97/annotations-1.3.2.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.5.0-b05/ede783b3e16339f83603e3293c83bda7a88526bc/hk2-utils-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.5.0-b05/51becf370a71dad73e6bcc554efb7246ad24c492/aopalliance-repackaged-2.5.0-b05.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/18.0/cce0823396aa693798f8882e64213b1772032b09/guava-18.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/net.jcip/jcip-annotations/1.0/afba4942caaeaf46aab0b976afd57cc7c181467e/jcip-annotations-1.0.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.20.0-GA/a9cbcdfb7e9f86fbc74d3afae65f2248bfbf82a0/javassist-3.20.0-GA.jar:/home/vagrant/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.1/f7be08ec23c21485b9b5a1cf1654c2ec8c58168d/jsr305-3.0.1.jar
+INFO  2017-05-08 13:26:38,698 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.library.path=/usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+INFO  2017-05-08 13:26:38,699 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.io.tmpdir=/tmp
+INFO  2017-05-08 13:26:38,699 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:java.compiler=<NA>
+INFO  2017-05-08 13:26:38,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.name=Linux
+INFO  2017-05-08 13:26:38,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.arch=amd64
+INFO  2017-05-08 13:26:38,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:os.version=3.10.0-327.36.1.el7.x86_64
+INFO  2017-05-08 13:26:38,700 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.name=vagrant
+INFO  2017-05-08 13:26:38,707 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.home=/home/vagrant
+INFO  2017-05-08 13:26:38,708 [Test worker] org.apache.zookeeper.ZooKeeper:logEnv(100): Client environment:user.dir=/dcos-commons/frameworks/locust
+INFO  2017-05-08 13:26:38,711 [Test worker] org.apache.zookeeper.ZooKeeper:<init>(438): Initiating client connection, connectString=127.0.0.1:34926 sessionTimeout=60000 watcher=org.apache.curator.ConnectionState@428249ce
+INFO  2017-05-08 13:26:38,774 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:logStartConnect(975): Opening socket connection to server 127.0.0.1/127.0.0.1:34926. Will not attempt to authenticate using SASL (unknown error)
+INFO  2017-05-08 13:26:38,777 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:primeConnection(852): Socket connection established to 127.0.0.1/127.0.0.1:34926, initiating session
+INFO  2017-05-08 13:26:38,778 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:34926] org.apache.zookeeper.server.NIOServerCnxnFactory:run(197): Accepted socket connection from /127.0.0.1:41652
+INFO  2017-05-08 13:26:38,807 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:34926] org.apache.zookeeper.server.ZooKeeperServer:processConnectRequest(868): Client attempting to establish new session at /127.0.0.1:41652
+INFO  2017-05-08 13:26:38,823 [SyncThread:0] org.apache.zookeeper.server.persistence.FileTxnLog:append(199): Creating new log file: log.1
+INFO  2017-05-08 13:26:38,868 [SyncThread:0] org.apache.zookeeper.server.ZooKeeperServer:finishSessionInit(617): Established session 0x15be9be08c70000 with negotiated timeout 60000 for client /127.0.0.1:41652
+INFO  2017-05-08 13:26:38,868 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:onConnected(1235): Session establishment complete on server 127.0.0.1/127.0.0.1:34926, sessionid = 0x15be9be08c70000, negotiated timeout = 60000
+INFO  2017-05-08 13:26:38,901 [Test worker-EventThread] org.apache.curator.framework.state.ConnectionStateManager:postState(228): State change: CONNECTED
+INFO  2017-05-08 13:26:39,022 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:pRequest(645): Got user-level KeeperException when processing sessionid:0x15be9be08c70000 type:create cxid:0x2 zxid:0x2 txntype:-1 reqpath:n/a Error Path:/dcos-service-locust Error:KeeperErrorCode = NoNode for /dcos-service-locust
+INFO  2017-05-08 13:26:39,456 [Test worker] org.apache.curator.framework.imps.CuratorFrameworkImpl:start(234): Starting
+INFO  2017-05-08 13:26:39,458 [Test worker] org.apache.zookeeper.ZooKeeper:<init>(438): Initiating client connection, connectString=127.0.0.1:34926 sessionTimeout=60000 watcher=org.apache.curator.ConnectionState@72c77df1
+INFO  2017-05-08 13:26:39,467 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:logStartConnect(975): Opening socket connection to server 127.0.0.1/127.0.0.1:34926. Will not attempt to authenticate using SASL (unknown error)
+INFO  2017-05-08 13:26:39,467 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:primeConnection(852): Socket connection established to 127.0.0.1/127.0.0.1:34926, initiating session
+INFO  2017-05-08 13:26:39,468 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:34926] org.apache.zookeeper.server.NIOServerCnxnFactory:run(197): Accepted socket connection from /127.0.0.1:41654
+INFO  2017-05-08 13:26:39,468 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:34926] org.apache.zookeeper.server.ZooKeeperServer:processConnectRequest(868): Client attempting to establish new session at /127.0.0.1:41654
+INFO  2017-05-08 13:26:39,471 [SyncThread:0] org.apache.zookeeper.server.ZooKeeperServer:finishSessionInit(617): Established session 0x15be9be08c70001 with negotiated timeout 60000 for client /127.0.0.1:41654
+INFO  2017-05-08 13:26:39,472 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:onConnected(1235): Session establishment complete on server 127.0.0.1/127.0.0.1:34926, sessionid = 0x15be9be08c70001, negotiated timeout = 60000
+INFO  2017-05-08 13:26:39,472 [Test worker-EventThread] org.apache.curator.framework.state.ConnectionStateManager:postState(228): State change: CONNECTED
+INFO  2017-05-08 13:26:39,505 [Test worker] com.mesosphere.sdk.scheduler.DefaultScheduler:updateConfig(511): Updating config with 2 validators...
+INFO  2017-05-08 13:26:39,524 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(76): New prospective config:
 {
   "name" : "locust",
   "role" : "locust-role",
@@ -112,18 +246,182 @@ INFO  2017-05-08 09:28:03,330 [Test worker] com.mesosphere.sdk.config.DefaultCon
   "web-url" : null,
   "zookeeper" : "master.mesos:2181",
   "pod-specs" : [ {
-    "type" : "locust",
+    "type" : "locust-master-pod",
     "user" : null,
-    "count" : 2,
-    "image" : null,
+    "count" : 1,
+    "image" : "fernandosanchez/locust-dcos",
     "networks" : [ ],
     "rlimits" : [ ],
     "uris" : [ "executor-test-uri" ],
     "task-specs" : [ {
-      "name" : "node",
+      "name" : "locust-master",
       "goal" : "RUNNING",
       "resource-set" : {
-        "id" : "node-resource-set",
+        "id" : "locust-master-resource-set",
+        "resource-specifications" : [ {
+          "@type" : "DefaultResourceSpec",
+          "name" : "cpus",
+          "value" : {
+            "type" : "SCALAR",
+            "scalar" : {
+              "value" : 0.5
+            },
+            "ranges" : null,
+            "set" : null,
+            "text" : null
+          },
+          "role" : "locust-role",
+          "principal" : "locust-principal",
+          "envKey" : null
+        }, {
+          "@type" : "DefaultResourceSpec",
+          "name" : "mem",
+          "value" : {
+            "type" : "SCALAR",
+            "scalar" : {
+              "value" : 256.0
+            },
+            "ranges" : null,
+            "set" : null,
+            "text" : null
+          },
+          "role" : "locust-role",
+          "principal" : "locust-principal",
+          "envKey" : null
+        }, {
+          "@type" : "PortsSpec",
+          "name" : "ports",
+          "value" : {
+            "type" : "RANGES",
+            "scalar" : null,
+            "ranges" : {
+              "range" : [ {
+                "begin" : 8089,
+                "end" : 8089
+              }, {
+                "begin" : 5557,
+                "end" : 5557
+              }, {
+                "begin" : 5558,
+                "end" : 5558
+              } ]
+            },
+            "set" : null,
+            "text" : null
+          },
+          "role" : "locust-role",
+          "principal" : "locust-principal",
+          "port-specs" : [ {
+            "@type" : "NamedVIPSpec",
+            "name" : "ports",
+            "value" : {
+              "type" : "RANGES",
+              "scalar" : null,
+              "ranges" : {
+                "range" : [ {
+                  "begin" : 8089,
+                  "end" : 8089
+                } ]
+              },
+              "set" : null,
+              "text" : null
+            },
+            "role" : "locust-role",
+            "principal" : "locust-principal",
+            "env-key" : null,
+            "port-name" : "locust-master-8089",
+            "protocol" : "tcp",
+            "visibility" : "EXTERNAL",
+            "vip-name" : "locust-master",
+            "vip-port" : 8089
+          }, {
+            "@type" : "NamedVIPSpec",
+            "name" : "ports",
+            "value" : {
+              "type" : "RANGES",
+              "scalar" : null,
+              "ranges" : {
+                "range" : [ {
+                  "begin" : 5557,
+                  "end" : 5557
+                } ]
+              },
+              "set" : null,
+              "text" : null
+            },
+            "role" : "locust-role",
+            "principal" : "locust-principal",
+            "env-key" : null,
+            "port-name" : "locust-master-5557",
+            "protocol" : "tcp",
+            "visibility" : "EXTERNAL",
+            "vip-name" : "locust-master",
+            "vip-port" : 5557
+          }, {
+            "@type" : "NamedVIPSpec",
+            "name" : "ports",
+            "value" : {
+              "type" : "RANGES",
+              "scalar" : null,
+              "ranges" : {
+                "range" : [ {
+                  "begin" : 5558,
+                  "end" : 5558
+                } ]
+              },
+              "set" : null,
+              "text" : null
+            },
+            "role" : "locust-role",
+            "principal" : "locust-principal",
+            "env-key" : null,
+            "port-name" : "locust-master-5558",
+            "protocol" : "tcp",
+            "visibility" : "EXTERNAL",
+            "vip-name" : "locust-master",
+            "vip-port" : 5558
+          } ],
+          "envKey" : null
+        } ],
+        "volume-specifications" : [ ],
+        "role" : "locust-role",
+        "principal" : "locust-principal"
+      },
+      "command-spec" : {
+        "value" : "echo locust >> locust-container-path/output && ./run.sh",
+        "environment" : {
+          "LOAD_TEST_URL" : "http://workload-simulation-webapp.appspot.com",
+          "LOCUST_FILE" : "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py",
+          "LOCUST_MODE" : "master"
+        }
+      },
+      "health-check-spec" : {
+        "command" : "true",
+        "max-consecutive-failures" : 3,
+        "delay" : 0,
+        "interval" : 5,
+        "timeout" : 10,
+        "gracePeriod" : 30
+      },
+      "readiness-check-spec" : null,
+      "config-files" : [ ],
+      "discovery-spec" : null
+    } ],
+    "placement-rule" : null,
+    "volumes" : [ ]
+  }, {
+    "type" : "locust-slave-pod",
+    "user" : null,
+    "count" : 2,
+    "image" : "fernandosanchez/locust-dcos",
+    "networks" : [ ],
+    "rlimits" : [ ],
+    "uris" : [ "executor-test-uri" ],
+    "task-specs" : [ {
+      "name" : "locust-slave",
+      "goal" : "RUNNING",
+      "resource-set" : {
+        "id" : "locust-slave-resource-set",
         "resource-specifications" : [ {
           "@type" : "DefaultResourceSpec",
           "name" : "cpus",
@@ -154,35 +452,70 @@ INFO  2017-05-08 09:28:03,330 [Test worker] com.mesosphere.sdk.config.DefaultCon
           "role" : "locust-role",
           "principal" : "locust-principal",
           "envKey" : null
-        } ],
-        "volume-specifications" : [ {
-          "@type" : "DefaultVolumeSpec",
-          "type" : "ROOT",
-          "container-path" : "locust-container-path",
-          "name" : "disk",
+        }, {
+          "@type" : "PortsSpec",
+          "name" : "ports",
           "value" : {
-            "type" : "SCALAR",
-            "scalar" : {
-              "value" : 5000.0
+            "type" : "RANGES",
+            "scalar" : null,
+            "ranges" : {
+              "range" : [ {
+                "begin" : 8089,
+                "end" : 8089
+              } ]
             },
-            "ranges" : null,
             "set" : null,
             "text" : null
           },
           "role" : "locust-role",
           "principal" : "locust-principal",
-          "envKey" : "DISK_SIZE"
+          "port-specs" : [ {
+            "@type" : "NamedVIPSpec",
+            "name" : "ports",
+            "value" : {
+              "type" : "RANGES",
+              "scalar" : null,
+              "ranges" : {
+                "range" : [ {
+                  "begin" : 8089,
+                  "end" : 8089
+                } ]
+              },
+              "set" : null,
+              "text" : null
+            },
+            "role" : "locust-role",
+            "principal" : "locust-principal",
+            "env-key" : null,
+            "port-name" : "locust-slave-8089",
+            "protocol" : "tcp",
+            "visibility" : "EXTERNAL",
+            "vip-name" : "locust-slave",
+            "vip-port" : 8089
+          } ],
+          "envKey" : null
         } ],
+        "volume-specifications" : [ ],
         "role" : "locust-role",
         "principal" : "locust-principal"
       },
       "command-spec" : {
-        "value" : "echo locust >> locust-container-path/output && sleep $SLEEP_DURATION",
+        "value" : "echo locust-slave >> locust-container-path/output && ./run.sh",
         "environment" : {
-          "SLEEP_DURATION" : "1000"
+          "LOAD_TEST_URL" : "http://workload-simulation-webapp.appspot.com",
+          "LOCUST_FILE" : "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py",
+          "LOCUST_MASTER" : "locust-master.marathon.l4lb.thisdcos.directory:8089",
+          "LOCUST_MODE" : "slave"
         }
       },
-      "health-check-spec" : null,
+      "health-check-spec" : {
+        "command" : "true",
+        "max-consecutive-failures" : 3,
+        "delay" : 0,
+        "interval" : 5,
+        "timeout" : 10,
+        "gracePeriod" : 30
+      },
       "readiness-check-spec" : null,
       "config-files" : [ ],
       "discovery-spec" : null
@@ -192,37 +525,40 @@ INFO  2017-05-08 09:28:03,330 [Test worker] com.mesosphere.sdk.config.DefaultCon
   } ],
   "replacement-failure-policy" : null
 }
-INFO  2017-05-08 09:28:03,335 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(86): Skipping config diff: There is no old config target to diff against
-INFO  2017-05-08 09:28:03,335 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(120): Changes detected between current target configuration 'null' and new configuration. Setting target to new configuration.
-INFO  2017-05-08 09:28:03,344 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:pRequest(645): Got user-level KeeperException when processing sessionid:0x15be8e396c90001 type:create cxid:0x3 zxid:0x6 txntype:-1 reqpath:n/a Error Path:/dcos-service-locust/Configurations Error:KeeperErrorCode = NoNode for /dcos-service-locust/Configurations
-INFO  2017-05-08 09:28:03,580 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:cleanupDuplicateAndUnusedConfigs(204): Config 99df5ff0-a74f-4939-928b-a82a10b80e25 : locust 
-INFO  2017-05-08 09:28:03,589 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:clearConfigsNotListed(303): Cleaning up 0 unused configs: []
-INFO  2017-05-08 09:28:03,593 [Test worker] com.mesosphere.sdk.scheduler.DefaultScheduler:build(353): Generating default deploy plan.
-INFO  2017-05-08 09:28:03,771 [Test worker] com.mesosphere.sdk.scheduler.plan.DefaultStepFactory:getStep(39): Generating step for pod: locust-0, with tasks: [node]
-INFO  2017-05-08 09:28:03,776 [Test worker] com.mesosphere.sdk.offer.TaskUtils:getTaskNames(79): PodInstance tasks: [locust-0-node]
-WARN  2017-05-08 09:28:03,780 [Test worker] com.mesosphere.sdk.curator.CuratorStateStore:fetchTask(307): No TaskInfo found for the requested name: locust-0-node at: /dcos-service-locust/Tasks/locust-0-node/TaskInfo
-INFO  2017-05-08 09:28:03,804 [Test worker] com.mesosphere.sdk.scheduler.plan.DeploymentStep:setStatus(84): locust-0:[node]: changed status from: PENDING to: PENDING (interrupted=false)
-INFO  2017-05-08 09:28:03,804 [Test worker] com.mesosphere.sdk.scheduler.plan.DefaultStepFactory:getStep(39): Generating step for pod: locust-1, with tasks: [node]
-INFO  2017-05-08 09:28:03,805 [Test worker] com.mesosphere.sdk.offer.TaskUtils:getTaskNames(79): PodInstance tasks: [locust-1-node]
-WARN  2017-05-08 09:28:03,808 [Test worker] com.mesosphere.sdk.curator.CuratorStateStore:fetchTask(307): No TaskInfo found for the requested name: locust-1-node at: /dcos-service-locust/Tasks/locust-1-node/TaskInfo
-INFO  2017-05-08 09:28:03,808 [Test worker] com.mesosphere.sdk.scheduler.plan.DeploymentStep:setStatus(84): locust-1:[node]: changed status from: PENDING to: PENDING (interrupted=false)
-INFO  2017-05-08 09:28:03,833 [Test worker] org.apache.zookeeper.server.NIOServerCnxn:closeSock(1007): Closed socket connection for client /127.0.0.1:33232 which had sessionid 0x15be8e396c90000
-INFO  2017-05-08 09:28:03,834 [Test worker] org.apache.zookeeper.server.NIOServerCnxn:closeSock(1007): Closed socket connection for client /127.0.0.1:33234 which had sessionid 0x15be8e396c90001
-INFO  2017-05-08 09:28:03,835 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:run(1098): Unable to read additional data from server sessionid 0x15be8e396c90001, likely server has closed socket, closing socket connection and attempting reconnect
-INFO  2017-05-08 09:28:03,835 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:33342] org.apache.zookeeper.server.NIOServerCnxnFactory:run(224): NIOServerCnxn factory exited run method
-INFO  2017-05-08 09:28:03,836 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:shutdown(441): shutting down
-INFO  2017-05-08 09:28:03,836 [Thread-5] org.apache.zookeeper.server.SessionTrackerImpl:shutdown(225): Shutting down
-INFO  2017-05-08 09:28:03,836 [Thread-5] org.apache.zookeeper.server.PrepRequestProcessor:shutdown(761): Shutting down
-INFO  2017-05-08 09:28:03,836 [Thread-5] org.apache.zookeeper.server.SyncRequestProcessor:shutdown(209): Shutting down
-INFO  2017-05-08 09:28:03,836 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:run(143): PrepRequestProcessor exited loop!
-INFO  2017-05-08 09:28:03,836 [SyncThread:0] org.apache.zookeeper.server.SyncRequestProcessor:run(187): SyncRequestProcessor exited!
-INFO  2017-05-08 09:28:03,837 [Thread-5] org.apache.zookeeper.server.FinalRequestProcessor:shutdown(415): shutdown of request processor complete
-INFO  2017-05-08 09:28:03,838 [Test worker] org.apache.zookeeper.server.ZooKeeperServer:shutdown(441): shutting down
-INFO  2017-05-08 09:28:03,838 [Test worker] org.apache.zookeeper.server.SessionTrackerImpl:shutdown(225): Shutting down
-INFO  2017-05-08 09:28:03,840 [Test worker-SendThread(127.0.0.1:33342)] org.apache.zookeeper.ClientCnxn:run(1098): Unable to read additional data from server sessionid 0x15be8e396c90000, likely server has closed socket, closing socket connection and attempting reconnect
-INFO  2017-05-08 09:28:03,840 [Test worker] org.apache.zookeeper.server.PrepRequestProcessor:shutdown(761): Shutting down
-INFO  2017-05-08 09:28:03,841 [Test worker] org.apache.zookeeper.server.SyncRequestProcessor:shutdown(209): Shutting down
-INFO  2017-05-08 09:28:03,841 [Test worker] org.apache.zookeeper.server.FinalRequestProcessor:shutdown(415): shutdown of request processor complete
+INFO  2017-05-08 13:26:39,545 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(86): Skipping config diff: There is no old config target to diff against
+INFO  2017-05-08 13:26:39,546 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:updateConfiguration(120): Changes detected between current target configuration 'null' and new configuration. Setting target to new configuration.
+INFO  2017-05-08 13:26:39,671 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:pRequest(645): Got user-level KeeperException when processing sessionid:0x15be9be08c70001 type:create cxid:0x3 zxid:0x6 txntype:-1 reqpath:n/a Error Path:/dcos-service-locust/Configurations Error:KeeperErrorCode = NoNode for /dcos-service-locust/Configurations
+INFO  2017-05-08 13:26:39,966 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:cleanupDuplicateAndUnusedConfigs(204): Config eb35c69b-7892-4fd3-bcc8-dff9592088f8 : locust 
+INFO  2017-05-08 13:26:39,967 [Test worker] com.mesosphere.sdk.config.DefaultConfigurationUpdater:clearConfigsNotListed(303): Cleaning up 0 unused configs: []
+INFO  2017-05-08 13:26:40,014 [Test worker] com.mesosphere.sdk.scheduler.plan.DefaultStepFactory:getStep(39): Generating step for pod: locust-master-pod-0, with tasks: [locust-master]
+INFO  2017-05-08 13:26:40,019 [Test worker] com.mesosphere.sdk.offer.TaskUtils:getTaskNames(79): PodInstance tasks: [locust-master-pod-0-locust-master]
+WARN  2017-05-08 13:26:40,023 [Test worker] com.mesosphere.sdk.curator.CuratorStateStore:fetchTask(307): No TaskInfo found for the requested name: locust-master-pod-0-locust-master at: /dcos-service-locust/Tasks/locust-master-pod-0-locust-master/TaskInfo
+INFO  2017-05-08 13:26:40,053 [Test worker] com.mesosphere.sdk.scheduler.plan.DeploymentStep:setStatus(84): locust-master-pod-0:[locust-master]: changed status from: PENDING to: PENDING (interrupted=false)
+INFO  2017-05-08 13:26:40,078 [Test worker] com.mesosphere.sdk.scheduler.plan.DefaultStepFactory:getStep(39): Generating step for pod: locust-slave-pod-0, with tasks: [locust-slave]
+INFO  2017-05-08 13:26:40,079 [Test worker] com.mesosphere.sdk.offer.TaskUtils:getTaskNames(79): PodInstance tasks: [locust-slave-pod-0-locust-slave]
+WARN  2017-05-08 13:26:40,084 [Test worker] com.mesosphere.sdk.curator.CuratorStateStore:fetchTask(307): No TaskInfo found for the requested name: locust-slave-pod-0-locust-slave at: /dcos-service-locust/Tasks/locust-slave-pod-0-locust-slave/TaskInfo
+INFO  2017-05-08 13:26:40,085 [Test worker] com.mesosphere.sdk.scheduler.plan.DeploymentStep:setStatus(84): locust-slave-pod-0:[locust-slave]: changed status from: PENDING to: PENDING (interrupted=false)
+INFO  2017-05-08 13:26:40,085 [Test worker] com.mesosphere.sdk.scheduler.plan.DefaultStepFactory:getStep(39): Generating step for pod: locust-slave-pod-1, with tasks: [locust-slave]
+INFO  2017-05-08 13:26:40,085 [Test worker] com.mesosphere.sdk.offer.TaskUtils:getTaskNames(79): PodInstance tasks: [locust-slave-pod-1-locust-slave]
+WARN  2017-05-08 13:26:40,087 [Test worker] com.mesosphere.sdk.curator.CuratorStateStore:fetchTask(307): No TaskInfo found for the requested name: locust-slave-pod-1-locust-slave at: /dcos-service-locust/Tasks/locust-slave-pod-1-locust-slave/TaskInfo
+INFO  2017-05-08 13:26:40,088 [Test worker] com.mesosphere.sdk.scheduler.plan.DeploymentStep:setStatus(84): locust-slave-pod-1:[locust-slave]: changed status from: PENDING to: PENDING (interrupted=false)
+INFO  2017-05-08 13:26:40,121 [Test worker] org.apache.zookeeper.server.NIOServerCnxn:closeSock(1007): Closed socket connection for client /127.0.0.1:41652 which had sessionid 0x15be9be08c70000
+INFO  2017-05-08 13:26:40,122 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:run(1098): Unable to read additional data from server sessionid 0x15be9be08c70000, likely server has closed socket, closing socket connection and attempting reconnect
+INFO  2017-05-08 13:26:40,124 [Test worker] org.apache.zookeeper.server.NIOServerCnxn:closeSock(1007): Closed socket connection for client /127.0.0.1:41654 which had sessionid 0x15be9be08c70001
+INFO  2017-05-08 13:26:40,125 [NIOServerCxn.Factory:0.0.0.0/0.0.0.0:34926] org.apache.zookeeper.server.NIOServerCnxnFactory:run(224): NIOServerCnxn factory exited run method
+INFO  2017-05-08 13:26:40,126 [Thread-5] org.apache.zookeeper.server.ZooKeeperServer:shutdown(441): shutting down
+INFO  2017-05-08 13:26:40,126 [Thread-5] org.apache.zookeeper.server.SessionTrackerImpl:shutdown(225): Shutting down
+INFO  2017-05-08 13:26:40,126 [Thread-5] org.apache.zookeeper.server.PrepRequestProcessor:shutdown(761): Shutting down
+INFO  2017-05-08 13:26:40,126 [Thread-5] org.apache.zookeeper.server.SyncRequestProcessor:shutdown(209): Shutting down
+INFO  2017-05-08 13:26:40,128 [Test worker] org.apache.zookeeper.server.ZooKeeperServer:shutdown(441): shutting down
+INFO  2017-05-08 13:26:40,129 [Test worker] org.apache.zookeeper.server.SessionTrackerImpl:shutdown(225): Shutting down
+INFO  2017-05-08 13:26:40,129 [Test worker] org.apache.zookeeper.server.PrepRequestProcessor:shutdown(761): Shutting down
+INFO  2017-05-08 13:26:40,129 [Test worker-SendThread(127.0.0.1:34926)] org.apache.zookeeper.ClientCnxn:run(1098): Unable to read additional data from server sessionid 0x15be9be08c70001, likely server has closed socket, closing socket connection and attempting reconnect
+INFO  2017-05-08 13:26:40,129 [Test worker] org.apache.zookeeper.server.SyncRequestProcessor:shutdown(209): Shutting down
+INFO  2017-05-08 13:26:40,129 [ProcessThread(sid:0 cport:-1):] org.apache.zookeeper.server.PrepRequestProcessor:run(143): PrepRequestProcessor exited loop!
+INFO  2017-05-08 13:26:40,129 [SyncThread:0] org.apache.zookeeper.server.SyncRequestProcessor:run(187): SyncRequestProcessor exited!
+INFO  2017-05-08 13:26:40,131 [Thread-5] org.apache.zookeeper.server.FinalRequestProcessor:shutdown(415): shutdown of request processor complete
+INFO  2017-05-08 13:26:40,131 [Test worker] org.apache.zookeeper.server.FinalRequestProcessor:shutdown(415): shutdown of request processor complete
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
