@@ -25,13 +25,13 @@ pods:
                 port: 8089
                 advertise: true
             locust-master-5557:
-	      port: 5557 
+              port: 5557 
               vip:
                 prefix: locust-master
                 port: 5557
                 advertise: true
             locust-master-5558
-	      port: 5558
+              port: 5558
               vip:
                 prefix: locust-master
                 port: 5558
