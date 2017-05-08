@@ -20,6 +20,9 @@ public class ServiceSpecTest extends BaseServiceSpecTest {
         ENV_VARS.set("NODE_DISK_TYPE", "ROOT");
 
         ENV_VARS.set("SLEEP_DURATION", "1000");
+
+        ENV_VARS.set("LOCUST-LOAD_TEST_URL", "http://workload-simulation-webapp.appspot.com");
+        ENV_VARS.set("LOCUST-LOCUST_FILE", "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py");
     }
 
     @Test

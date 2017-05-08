@@ -3,11 +3,19 @@
   "minDcosReleaseVersion": "1.9",
   "name": "locust",
   "version": "{{package-version}}",
-  "maintainer": "support@YOURNAMEHERE.COM",
-  "description": "YOURNAMEHERE on DC/OS",
+  "maintainer": "https://dcos.io/community",
+  "scm": "https://github.com/fernandosanchezmunoz/locust-dcos",
+  "description": "Locust on DC/OS",
   "selected": false,
   "framework": true,
-  "tags": ["locust"],
-  "postInstallNotes": "DC/OS YOURNAMEHERE is being installed!\n\n\tDocumentation: http://YOURNAMEHERE.COM/DOCS\n\tIssues: http://YOURNAMEHERE.COM/SUPPORT",
-  "postUninstallNotes": "DC/OS YOURNAMEHERE has been uninstalled."
+  "tags": ["locust", "test", "web", "load testing", "testing"],
+  "preInstallNotes": "This DC/OS Service is currently EXPERIMENTAL. There may be bugs, incomplete features, incorrect documentation, or other discrepancies.",
+  "postInstallNotes": "DC/OS Locust is being installed!\n\n\tDocumentation: https://github.com/fernandosanchezmunoz/locust-dcos/wiki",
+  "postUninstallNotes": "DC/OS Locust has been uninstalled.",
+  "licenses": [
+    {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  ]
 }

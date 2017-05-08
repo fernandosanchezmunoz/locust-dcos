@@ -1,6 +1,22 @@
 {
   "type": "object",
     "properties": {
+      "locust": {
+        "description": "Locust specific configuration properties",
+        "type": "object",
+        "properties": {
+          "load_test_URL":{
+            "description":"URL to be tested",
+            "type":"string",
+            "default":"http://workload-simulation-webapp.appspot.com"
+          },
+          "locust_file":{
+            "description":"Locust file to be used",
+            "type":"string",
+            "default":"https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/locustfile.py"
+          },
+        }        
+      }, 
       "service": {
         "type": "object",
         "description": "DC/OS service configuration properties",
