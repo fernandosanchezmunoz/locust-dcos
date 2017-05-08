@@ -1,0 +1,83 @@
+name: "locust"
+scheduler:
+  principal: "locust-principal"
+pods:
+  locust-master-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: 1  
+    tasks:
+      locust-master:
+        goal: RUNNING
+        cpus: 0.5
+        memory: 256
+        env:
+          "LOCUST_MODE": "master"
+          "LOAD_TEST_URL": "{{LOCUST-LOAD_TEST_URL}}"
+          "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
+        ports:
+          locust-master:
+            port: 8089
+            vip:
+              prefix: locust-master
+              port: 8089
+              advertise: true
+            port: 5557 
+            vip:
+              prefix: locust-master
+              port: 5557
+              advertise: true
+            port: 5558
+            vip:
+              prefix: locust-master
+              port: 5558
+              advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10
+  locust-slave-pod:
+    container:
+      #the image here is built and pushed
+      #https://github.com/mesosphere/dcos-commons/blob/master/frameworks/proxylite/src/main/dist/svc.yml
+      image-name: fernandosanchez/locust-dcos
+    count: {{NODE_COUNT}}
+    tasks:
+      locust-slave:
+        goal: RUNNING
+        cpus: {{NODE_CPUS}}
+        memory: {{NODE_MEM}}
+        env:
+          "LOAD_TEST_URL": "{{LOCUST-LOAD_TEST_URL}}"
+          "LOCUST_MODE": "slave"
+          "LOCUST_FILE": "{{LOCUST-LOCUST_FILE}}"
+          "LOCUST_MASTER": "{{SERVICE-NAME}}.marathon.l4lb.thisdcos.directory:8089"
+        ports:
+          locust-master:
+            port: 8089
+            vip:
+              prefix: locust-slave
+              port: 8089
+              advertise: true
+        health-check:
+          cmd: "true"
+          interval: 5
+          grace-period: 30
+          max-consecutive-failures: 3
+          delay: 0
+          timeout: 10      
+plans:
+  deploy:
+    strategy: serial
+    phases:
+      locust-master-phase:
+        strategy: parallel
+        pod: locust-master-pod
+      locust-slave-phase:
+        strategy: serial
+        pod: locust-slave-pod

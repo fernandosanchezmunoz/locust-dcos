@@ -1,0 +1,37 @@
+{
+  "id": "/locust/locust-slave",
+  "instances": 3,
+  "cpus": 0.1,
+  "mem": 128,
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "fernandosanchez/locust-dcos",
+      "network": "BRIDGE",
+      "privileged": false,
+      "forcePullImage": false
+    }
+  },
+  "upgradeStrategy": {
+    "minimumHealthCapacity": 1,
+    "maximumOverCapacity": 1
+  },
+  "unreachableStrategy": {
+    "inactiveAfterSeconds": 300,
+    "expungeAfterSeconds": 600
+  },
+  "killSelection": "YOUNGEST_FIRST",
+  "portDefinitions": [
+    {
+      "port": 0,
+      "protocol": "tcp",
+      "name": "default"
+    }
+  ],
+  "env": {
+    "LOAD_TEST_URL": "http://workload-simulation-webapp.appspot.com",
+    "LOCUST_MODE": "slave",
+    "LOCUST_FILE": "https://raw.githubusercontent.com/fernandosanchezmunoz/locust-dcos/master/src/main/docker/files/locustfile.py",
+    "LOCUST_MASTER": "locust-master.marathon.l4lb.thisdcos.directory"
+  }
+}
