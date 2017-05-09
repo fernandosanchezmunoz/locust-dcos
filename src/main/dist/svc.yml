@@ -11,7 +11,7 @@ pods:
     tasks:
       locust-master:
         goal: RUNNING
-        cmd: "echo locust >> locust-container-path/output && ./run.sh"
+        cmd: "echo locust-slave >> locust-container-path/output && ./run.sh"
         cpus: 0.5
         memory: 256
         env:
